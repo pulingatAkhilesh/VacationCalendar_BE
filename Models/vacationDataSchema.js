@@ -1,37 +1,30 @@
 const { default: mongoose } = require("mongoose");
 
 const vacationDataSchema = mongoose.Schema({
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "properties": {
-        "userId": {
-            "type": "string"
-        },
-        "year": {
-        "type": "integer"
-        },
-        "months": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "month": {
-                        "type": "string"
-                    },
-                    "dates": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "format": "date"  // Assuming dates are in ISO format (YYYY-MM-DD)
-                        }
-                    }
-                },
-                "required": ["month", "dates"]
-            }
-        }
+    userId: {
+        type: String,
+        required: true
     },
-    "required": ["userId", "year", "months"]
-})
+    year: {
+        type: Number,
+        required: true
+    },
+    months: {
+        type: [
+            {
+                month: {
+                    type: String,
+                    required: true
+                },
+                dates: {
+                    type: [ Date ],
+                    required: true
+                }
+            }
+        ],
+        required: true
+    }
+});
 
 const vacationData = mongoose.model('vacationData', vacationDataSchema);
 module.exports = vacationData;
