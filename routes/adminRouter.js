@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const multer = require('multer');
+const { adminAuth } = require('../middlewares/authorization');
+const { createTeam } = require('../controllers/teamController');
 
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -14,3 +16,6 @@ const fileStorage = multer.diskStorage({
 
 const upload = multer({ storage: fileStorage });
 
+router.post('/createTeam', adminAuth, createTeam);
+
+module.exports = router;

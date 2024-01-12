@@ -7,13 +7,14 @@ const teamRoles = [ 'TeamLead', 'TeamMember', 'administrator' ]; // Add more rol
 const teamSchema = mongoose.Schema({
     teamName: {
         type: String,
-        required: true
+        required: true,
+        unique: true,
     },
     roles: [
         {
             roleName: {
                 type: String,
-                required, true,
+                required: true,
                 enum: teamRoles,
             },
         },
