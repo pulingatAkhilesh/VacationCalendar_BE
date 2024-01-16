@@ -1,16 +1,22 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
 const connectDB = require('./config/db');
+const cors = require('cors');
 
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/authRouter');
 const usersRouter = require('./routes/users');
 const adminRouter = require('./routes/adminRouter');
 
-var app = express();
+const app = express();
+
+// use cors middleware.
+app.use(cors());
+
+// connect database.
 connectDB();
 
 const teamRouter = require('./routes/teamRouter');
