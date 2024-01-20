@@ -1,8 +1,10 @@
 const express = require('express');
-const { getTeams, createTeam } = require('../controllers/teamController');
+const { getTeams, createTeam, getPredefinedRoles } = require('../controllers/teamController');
 const router = express.Router();
 
-router.get('/', getTeams);
-router.post('/', createTeam);
+router.get('/teams', getTeams);
+router.get('/predefinedRoles', getPredefinedRoles);
+
+router.post('/createTeam', createTeam);
 
 module.exports = router;

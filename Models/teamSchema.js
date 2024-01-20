@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
-
-// Define enum values
-const teamRoles = [ 'TeamLead', 'TeamMember', 'administrator' ]; // Add more roles as needed.
+const teamRoles = require('../constants/roles');
 
 // Define teamSchema
 const teamSchema = mongoose.Schema({
@@ -16,20 +14,23 @@ const teamSchema = mongoose.Schema({
                 type: String,
                 required: true,
                 enum: teamRoles,
+                validate: {
+                    validator: function(value){
+                        // Check if the roleName is "administrator" only for the "dba" team.
+                        return !(this.teamName === "dba" && value !== "administrator");
+                    },
+                    message: 'Invalid role for the Team.',
+                },
+                
             },
-        },
-    ],
-    members: [
-        {
-            userId: {
-                type: String,
-                required: true,
-            },
-            role: {
-                type: String,
-                required: true,
-                enum: teamRoles,
-            },
+            members: [
+                {
+                    username: {
+                        type: String,
+                        required: true,
+                    },
+                },
+            ]
         },
     ],
 });
