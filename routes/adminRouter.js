@@ -4,7 +4,7 @@ const router = express.Router();
 const multer = require('multer');
 const { adminAuth } = require('../middlewares/authorization');
 const { createTeam } = require('../controllers/teamController');
-const { createAdmin } = require('../controllers/authController');
+const { createAdmin, registerUser } = require('../controllers/authController');
 
 router.post('/createAdmin', createAdmin);
 
@@ -16,9 +16,9 @@ const fileStorage = multer.diskStorage({
         cb(null, Date.now() + '-' + file.originalname)
     }
 })
-
 const upload = multer({ storage: fileStorage });
 
 router.post('/createTeam', adminAuth, createTeam);
+router.post('/registerUser', adminAuth, registerUser);
 
 module.exports = router;

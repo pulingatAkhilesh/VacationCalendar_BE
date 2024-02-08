@@ -25,7 +25,7 @@ const teamSchema = mongoose.Schema({
             },
             members: [
                 {
-                    username: {
+                    userID: {
                         type: String,
                         required: true,
                     },

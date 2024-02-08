@@ -5,11 +5,11 @@ const jwt = require('jsonwebtoken');
 
 // function for Login.
 const doLogin = async (req, res) => {
-    const user = await USERS.findOne({ username: req.body.username });
+    const user = await USERS.findOne({ userID: req.body.userID });
     if(user){
         bcrypt.compare(req.body.password, user.password, (error, hashRes) => {
             if(hashRes){
-                const token = jwt.sign({userId: user._id, username: user.username, fullName: user?.fullName, role: user?.role}, "vacationcalendar", {expiresIn: '2d'});
+                const token = jwt.sign({userId: user._id, userID: user.userID, fullName: user?.fullName, role: user?.role}, "vacationcalendar", {expiresIn: '2d'});
                 user.password = undefined;
                 res.status(200).json({ message: 'login successful.', token: token, user: user });
             }
@@ -22,13 +22,13 @@ const doLogin = async (req, res) => {
 // function for registering administrator.
 const createAdmin = async (req, res) => {
     const existingEmail = await USERS.findOne({ email: req.body.email });
-    const existingUsername = await USERS.findOne({ username: req.body.username});
+    const existingUserID = await USERS.findOne({ userID: req.body.userID});
     if(existingEmail){
-        res.status(200).json({ message: 'email already exist.' });
+        res.status(200).json({ message: 'Email already exist.' });
         return;
     };
-    if(existingUsername){
-        res.status(200).json({ message: 'username already exist.' });
+    if(existingUserID){
+        res.status(200).json({ message: 'User ID already exist.' });
         return;
     };
 
@@ -39,12 +39,43 @@ const createAdmin = async (req, res) => {
         USERS({
             fullName: req.body.fullName,
             email: req.body.email,
-            username: req.body.username,
+            userID: req.body.userID,
             password: hash
         }).save().then((response) => {
             res.status(200).json({ message: 'admin registration successful.' });
         });
     });
-}
+};
 
-module.exports = { doLogin, createAdmin };
+// function for registering new user.
+const registerUser = async (req, res) => {
+    const existingEmail = await USERS.findOne({ email: req.body.email });
+    const existingUserID = await USERS.findOne({ userID: req.body.userID });
+    if(existingEmail){
+        res.status(200).json({ message: 'email already exist.' });
+        return;
+    };
+    if(existingUserID){
+        res.status(200).json({ message: 'User ID already exist.' });
+        return;
+    };
+
+    console.log('input data req.body: ', req.body);
+
+    bcrypthash(req.body.password, saltRounds, (err, hash) => {
+        console.log('hash: ', hash);
+        USERS({
+            fullName: req.body.fullName,
+            email: req.body.email,
+            userID: req.body.userID,
+            password: hash,
+            defaultTeam: req.body.defaultTeam,
+            defaultRole: req.body.defaultRole,
+            joiningDate: req.body.joiningDate,
+        }).save().then((response) => {
+            res.status(200).json({ message: 'New user registration successful.' });
+        });
+    });
+};
+
+module.exports = { doLogin, createAdmin, registerUser };

@@ -10,7 +10,7 @@ const userSchema = mongoose.Schema({
         required: true,
         unique: true,
     },
-    username: {
+    userID: {
         type: String,
         required: true,
         unique: true,
@@ -19,6 +19,18 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true,
     },
+    defaultTeam: {
+        type: String,
+        required: true,
+    },
+    defaultRole: {
+        type: String,
+        required: true,
+    },
+    joiningDate: {
+        type: Date,
+        required: true,
+    }
 });
 
 const users = mongoose.model('users', userSchema);
