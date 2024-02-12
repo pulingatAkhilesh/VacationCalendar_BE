@@ -9,7 +9,8 @@ const doLogin = async (req, res) => {
     if(user){
         bcrypt.compare(req.body.password, user.password, (error, hashRes) => {
             if(hashRes){
-                const token = jwt.sign({userId: user._id, userID: user.userID, fullName: user?.fullName, role: user?.role}, "vacationcalendar", {expiresIn: '2d'});
+                const token = jwt.sign({userID: user._id, email: user.email, fullName: user?.fullName, role: user?.defaultRole}, "vacationcalendar", {expiresIn: '2d'});
+                console.log('doLogin - token: ', token)
                 user.password = undefined;
                 res.status(200).json({ message: 'login successful.', token: token, user: user });
             }
@@ -40,7 +41,10 @@ const createAdmin = async (req, res) => {
             fullName: req.body.fullName,
             email: req.body.email,
             userID: req.body.userID,
-            password: hash
+            password: hash,
+            defaultTeam: req.body.defaultTeam,
+            defaultRole: req.body.defaultRole,
+            joiningDate: req.body.joiningDate,
         }).save().then((response) => {
             res.status(200).json({ message: 'admin registration successful.' });
         });
@@ -62,7 +66,7 @@ const registerUser = async (req, res) => {
 
     console.log('input data req.body: ', req.body);
 
-    bcrypthash(req.body.password, saltRounds, (err, hash) => {
+    bcrypt.hash(req.body.password, saltRounds, (err, hash) => {
         console.log('hash: ', hash);
         USERS({
             fullName: req.body.fullName,

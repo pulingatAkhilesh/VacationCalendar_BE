@@ -1,4 +1,4 @@
 // roles.js
-const predefinedRoles = ['TeamLead', 'TeamMember', 'administrator'];
+const PREDEFINED_ROLES = ['TeamLead', 'TeamMember', 'administrator'];
 
-module.exports = predefinedRoles;
+module.exports = PREDEFINED_ROLES;

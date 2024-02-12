@@ -8,7 +8,8 @@ const cors = require('cors');
 
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/authRouter');
-const usersRouter = require('./routes/users');
+const teamRouter = require('./routes/teamRouter');
+const usersRouter = require('./routes/userRouter');
 const adminRouter = require('./routes/adminRouter');
 
 const app = express();
@@ -18,8 +19,6 @@ app.use(cors());
 
 // connect database.
 connectDB();
-
-const teamRouter = require('./routes/teamRouter');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

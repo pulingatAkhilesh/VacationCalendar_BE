@@ -1,7 +1,7 @@
 const { default: mongoose } = require("mongoose");
 
 const vacationDataSchema = mongoose.Schema({
-    userId: {
+    userID: {
         type: String,
         required: true
     },
