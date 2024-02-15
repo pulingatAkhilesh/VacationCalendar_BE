@@ -2,6 +2,7 @@ const USERS = require('../Models/userSchema');
 const bcrypt = require('bcrypt');
 const saltRounds = 14;
 const jwt = require('jsonwebtoken');
+const TEAM = require('../Models/teamSchema');
 
 // function for Login.
 const doLogin = async (req, res) => {
@@ -9,6 +10,7 @@ const doLogin = async (req, res) => {
     if(user){
         bcrypt.compare(req.body.password, user.password, (error, hashRes) => {
             if(hashRes){
+                console.log('user?.defaultRole: ', user?.defaultRole);
                 const token = jwt.sign({userID: user._id, email: user.email, fullName: user?.fullName, role: user?.defaultRole}, "vacationcalendar", {expiresIn: '2d'});
                 console.log('doLogin - token: ', token)
                 user.password = undefined;
@@ -64,22 +66,30 @@ const registerUser = async (req, res) => {
         return;
     };
 
-    console.log('input data req.body: ', req.body);
-
-    bcrypt.hash(req.body.password, saltRounds, (err, hash) => {
-        console.log('hash: ', hash);
-        USERS({
+    try{
+        const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+        
+        // Save the user to the database.
+        const newUser = await USERS.create({
             fullName: req.body.fullName,
             email: req.body.email,
             userID: req.body.userID,
-            password: hash,
+            password: hashedPassword,
             defaultTeam: req.body.defaultTeam,
             defaultRole: req.body.defaultRole,
             joiningDate: req.body.joiningDate,
-        }).save().then((response) => {
-            res.status(200).json({ message: 'New user registration successful.' });
         });
-    });
+
+        // Update the team with the new user's userID.
+        await TEAM.updateOne(
+            { teamName: req.body.defaultTeam, 'roles.roleName': req.body.defaultRole },
+            { $push: { 'roles.$.members': { userID: req.body.userID } } }
+        );
+        res.status(200).json({ message: 'New user registration successful.', newUser });
+    }catch(error){
+        console.error('Error registering new user.');
+        res.status(500).json({ message: 'Server error.' });
+    };
 };
 
 module.exports = { doLogin, createAdmin, registerUser };

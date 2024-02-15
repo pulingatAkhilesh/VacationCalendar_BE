@@ -33,6 +33,7 @@ const createTeam = async (req, res) => {
 
 // Add a user under selected Team > Role
 const addUserToTeamRole = async (req, res) => {
+    console.log('req: ', req);
     try{
         const { userID, teamName, roleName } = req.body;
 

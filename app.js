@@ -10,6 +10,7 @@ const indexRouter = require('./routes/index');
 const authRouter = require('./routes/authRouter');
 const teamRouter = require('./routes/teamRouter');
 const usersRouter = require('./routes/userRouter');
+const teamLeadRouter = require('./routes/teamLeadRouter');
 const adminRouter = require('./routes/adminRouter');
 
 const app = express();
@@ -32,6 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/admin', adminRouter);
+app.use('/teamlead', teamLeadRouter);
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use('/teams', teamRouter);

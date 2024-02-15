@@ -5,6 +5,4 @@ const router = express.Router();
 router.get('/teams', getTeams);
 router.get('/predefinedRoles', getPredefinedRoles);
 
-router.post('/createTeam', createTeam);
-
 module.exports = router;
