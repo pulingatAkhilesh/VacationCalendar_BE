@@ -1,11 +1,30 @@
 const jwt = require('jsonwebtoken');
 
 // Authorization for Role: TeamMember
-const teamMemberAuth = (req, res, next) => {
+const userAuth = (req, res, next) => {
     try{
         const token = req.headers['authorization'].split(' ')[1];
         jwt.verify(token, 'vacationcalendar', (error, decodedToken) => {
             if(decodedToken){
+                req.userId = decodedToken.userID;
+                next();
+            }else{
+                console.log(error);
+                res.status(401).json({ message: 'unauthorized user.' });
+            };
+        });
+    }catch(error){
+        console.log(error);
+        res.status(401).json({ error: error.message });
+    };
+};
+
+// Authorization for Role: TeamMember
+const teamMemberAuth = (req, res, next) => {
+    try{
+        const token = req.headers['authorization'].split(' ')[1];
+        jwt.verify(token, 'vacationcalendar', (error, decodedToken) => {
+            if(decodedToken && decodedToken.role === 'TeamMember'){
                 req.userId = decodedToken.userID;
                 next();
             }else{
@@ -62,4 +81,4 @@ const adminAuth = (req, res, next) => {
     };
 };
 
-module.exports = { teamMemberAuth, teamLeadAuth, adminAuth };
+module.exports = { userAuth, teamMemberAuth, teamLeadAuth, adminAuth };

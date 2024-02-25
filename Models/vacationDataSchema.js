@@ -2,7 +2,7 @@ const { default: mongoose } = require("mongoose");
 
 const vacationDataSchema = mongoose.Schema({
     userID: {
-        type: String,
+        type: mongoose.Types.ObjectId,
         required: true
     },
     year: {
@@ -17,7 +17,7 @@ const vacationDataSchema = mongoose.Schema({
                     required: true
                 },
                 dates: {
-                    type: [ Date ],
+                    type: [ String ],
                     required: true
                 }
             }
@@ -26,5 +26,5 @@ const vacationDataSchema = mongoose.Schema({
     }
 });
 
-const vacationData = mongoose.model('vacationData', vacationDataSchema);
-module.exports = vacationData;
+const VACATIONDATA = mongoose.model('vacationData', vacationDataSchema);
+module.exports = VACATIONDATA;
