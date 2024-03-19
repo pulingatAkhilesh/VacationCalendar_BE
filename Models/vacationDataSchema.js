@@ -1,4 +1,4 @@
-const { default: mongoose } = require("mongoose");
+const mongoose = require("mongoose");
 
 const vacationDataSchema = mongoose.Schema({
     userID: {
@@ -9,21 +9,18 @@ const vacationDataSchema = mongoose.Schema({
         type: Number,
         required: true
     },
-    months: {
-        type: [
-            {
-                month: {
-                    type: String,
-                    required: true
-                },
-                dates: {
-                    type: [ String ],
-                    required: true
-                }
-            }
-        ],
-        required: true
-    }
+    months: [{
+        month: {
+            type: Number,
+            required: true
+        },
+        dates: [{
+            date: {
+                type: Number,
+                required: true
+            },
+        }]
+    }]
 });
 
 const VACATIONDATA = mongoose.model('vacationData', vacationDataSchema);
