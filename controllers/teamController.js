@@ -1,5 +1,24 @@
+const jwt = require('jsonwebtoken');
+const util = require('util');
 const TEAM = require('../Models/teamSchema');
 const PREDEFINED_ROLES = require('../constants/roles');
+const USERS = require("../Models/userSchema");
+
+// Get userID from db.
+const getUserIDFromDB = async (_id) => {
+    try{
+        const user = await USERS.findById(_id);
+        if(user){
+            return user.userID;
+        }else{
+            console.log('User does not exist.');
+            return null;
+        };
+    }catch(error){
+        console.error('Error fetching user:', error);
+        throw error;
+    };
+};
 
 // GET all Teams.
 const getTeams = async (req, res) => {
@@ -66,9 +85,57 @@ const addUserToTeamRole = async (req, res) => {
     };
 };
 
+// Function to extract all teams in which the logged-in user added.
+const getUserTeams = async (req, res) => {
+    try {
+        const token = req.headers['authorization'].split(' ')[1];
+        const decodedToken = await util.promisify(jwt.verify)(token, 'vacationcalendar');
+        
+        const uId = decodedToken.uId;
+        const userID = await getUserIDFromDB(uId);
+        const userTeams = await TEAM.find({ 'roles.members.userID': userID });
+        
+        return userTeams; // Returning user teams array
+    } catch (error) {
+        console.error(error);
+        throw error; // Rethrowing the error
+    }
+};
+
+
+// Function to extract userIDs from each team.
+const getUsersFromTeams = async (req, res) => {
+    try {
+        const userTeams = await getUserTeams(req, res);
+        const userIDsByTeam = userTeams.map(team => {
+            return {
+                teamName: team.teamName,
+                userIDs: extractUserIDs(team)
+            };
+        });
+        res.status(200).json(userIDsByTeam);
+    } catch (error) {
+        console.error('Error retrieving users from teams:', error);
+        res.status(500).json({ message: 'Server error.' });
+    };
+};
+
+// Function to extract userID from a team's roles.
+const extractUserIDs = (team) => {
+    const userIDs = [];
+    team.roles.forEach(role => {
+        role.members.forEach(member => {
+            userIDs.push(member.userID);
+        });
+    });
+    return userIDs;
+};
+
 module.exports = {
     getTeams,
     getPredefinedRoles,
     createTeam,
     addUserToTeamRole,
+    getUserTeams,
+    getUsersFromTeams,
 };

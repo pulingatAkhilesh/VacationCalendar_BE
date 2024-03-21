@@ -11,7 +11,7 @@ const doLogin = async (req, res) => {
         bcrypt.compare(req.body.password, user.password, (error, hashRes) => {
             if(hashRes){
                 console.log('user?.defaultRole: ', user?.defaultRole);
-                const token = jwt.sign({userID: user._id, email: user.email, fullName: user?.fullName, role: user?.defaultRole}, "vacationcalendar", {expiresIn: '2d'});
+                const token = jwt.sign({uId: user._id, email: user.email, fullName: user?.fullName, role: user?.defaultRole}, "vacationcalendar", {expiresIn: '2d'});
                 console.log('doLogin - token: ', token)
                 user.password = undefined;
                 res.status(200).json({ message: 'login successful.', token: token, user: user });
