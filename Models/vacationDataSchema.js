@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const vacationDataSchema = mongoose.Schema({
-    userID: {
+    uId: {
         type: mongoose.Types.ObjectId,
         required: true
     },
@@ -23,5 +23,5 @@ const vacationDataSchema = mongoose.Schema({
     }]
 });
 
-const VACATIONDATA = mongoose.model('vacationData', vacationDataSchema);
+const VACATIONDATA = mongoose.model('vacationData', vacationDataSchema, 'vacationData');
 module.exports = VACATIONDATA;

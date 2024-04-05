@@ -15,11 +15,7 @@ const getAllUsers = async (req, res) => {
 const getUserFullName = async (req, res) => {
     try{
         const { userID } = req.params;
-        console.log('========================================');
-        console.log('getUserFullName - req: ', req);
-        console.log('getUserFullName - req.params: ', req.params);
         const user = await USERS.findOne({ userID: userID }).select('fullName');
-        console.log('getUserFullName - user: ', user);
         if(!user){
             return res.status(404).json({ message: 'User not found.' });
         }
@@ -31,13 +27,13 @@ const getUserFullName = async (req, res) => {
 };
 
 const createVacation = async (req, res) => {
-    const { userID, year, month, selectedDates } = req.body;
+    const { uId, year, month, selectedDates } = req.body;
     try{
         // Check if the document already exists for the given year and month.
-        let vacationData = await VACATIONDATA.findOne({ userID, year });
+        let vacationData = await VACATIONDATA.findOne({ uId, year });
         if(!vacationData){
             vacationData = new VACATIONDATA({
-                userID,
+                uId,
                 year,
                 months: [],
             });
@@ -55,7 +51,10 @@ const createVacation = async (req, res) => {
 
         // Add the selected dates to the month.
         selectedDates.forEach(date => {
-            monthData.dates.push({ date });
+            const dateExists = monthData.dates.some(existingDate => existingDate.date === date);
+            if(!dateExists){
+                monthData.dates.push({ date });
+            };
         });
 
         // Save the selected dates to the month.
@@ -68,4 +67,10 @@ const createVacation = async (req, res) => {
     }
 }
 
-module.exports = { getAllUsers, getUserFullName, createVacation };
+const getUserVacationData = async (req, res) => {
+    const { uId } = req.body;
+    const userVacationData = await VACATIONDATA.find({ uId: uId });
+    console.log('userVacationData: ', userVacationData)
+}
+
+module.exports = { getAllUsers, getUserFullName, createVacation, getUserVacationData };

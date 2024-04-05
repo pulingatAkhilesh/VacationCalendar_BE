@@ -94,8 +94,10 @@ const getUserTeams = async (req, res) => {
         const uId = decodedToken.uId;
         const userID = await getUserIDFromDB(uId);
         const userTeams = await TEAM.find({ 'roles.members.userID': userID });
+        console.log('getUserTeams - userTeams: ', userTeams)
         
-        return userTeams; // Returning user teams array
+        res.status(200).json(userTeams);
+        // return userTeams;
     } catch (error) {
         console.error(error);
         throw error; // Rethrowing the error
