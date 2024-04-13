@@ -68,9 +68,11 @@ const createVacation = async (req, res) => {
 }
 
 const getUserVacationData = async (req, res) => {
-    const { uId } = req.body;
+    const { uId } = req.params;
+    console.log('userVacationData - req.params: ', req.params)
     const userVacationData = await VACATIONDATA.find({ uId: uId });
     console.log('userVacationData: ', userVacationData)
+    res.status(200).json(userVacationData)
 }
 
 module.exports = { getAllUsers, getUserFullName, createVacation, getUserVacationData };

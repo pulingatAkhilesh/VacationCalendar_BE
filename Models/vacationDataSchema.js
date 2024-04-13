@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const vacationDataSchema = mongoose.Schema({
     uId: {
-        type: mongoose.Types.ObjectId,
+        type: String,
         required: true
     },
     year: {
