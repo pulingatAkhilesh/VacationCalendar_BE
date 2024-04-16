@@ -11,21 +11,22 @@ const getAllUsers = async (req, res) => {
     };
 };
 
-// Get fullName of the given userID.
+// GET fullName of the given userID.
 const getUserFullName = async (req, res) => {
     try{
-        const { userID } = req.params;
-        const user = await USERS.findOne({ userID: userID }).select('fullName');
+        const { user_uId } = req.params;
+        const user = await USERS.findById(user_uId).select('fullName');
+        console.log('getUserFullName - user: ', user)
         if(!user){
             return res.status(404).json({ message: 'User not found.' });
-        }
+        };
         res.status(200).json({ fullName: user.fullName });
     }catch(error){
-        console.error('Error fetching user full name: ', error);
         res.status(500).json({ message: 'Server error.' });
     };
 };
 
+// Store vacation planned dates of a user in the database.
 const createVacation = async (req, res) => {
     const { uId, year, month, selectedDates } = req.body;
     try{
@@ -67,6 +68,7 @@ const createVacation = async (req, res) => {
     }
 }
 
+// GET planned vacation dates of a user.
 const getUserVacationData = async (req, res) => {
     const { uId } = req.params;
     console.log('userVacationData - req.params: ', req.params)

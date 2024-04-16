@@ -24,6 +24,7 @@ const getUserIDFromDB = async (_id) => {
 const getTeams = async (req, res) => {
     try{
         const teams = await TEAM.find();
+        console.log('getTeams - teams: ', teams)
         res.status(200).json(teams);
     }catch(error){
         res.status(500).json({ error: error.message });
@@ -42,12 +43,26 @@ const getPredefinedRoles = async (req, res) => {
 // Create a new Team.
 const createTeam = async (req, res) => {
     try{
-        const newTeam = new TEAM(req.body);
+        const { teamName, teamRoles } = req.body;
+
+        // Check if a team with the same name already exists.
+        const existingTeam = await TEAM.findOne({ teamName });
+        if(existingTeam){
+            return res.status(400).json({ error: 'A team with the same name already exists.' });
+        };
+
+        // Create a new team.
+        const newTeam = new TEAM({ teamName, teamRoles });
         await newTeam.save();
-        res.status(200).json(newTeam);
+
+        res.status(201).json({ message: 'Team created successfully.' });
     }catch(error){
-        res.status(500).json({ error: error.message });
-    };
+        if(error.code === 11000 && error.keyPattern && error.keyPattern.teamName){
+            return res.status(400).json({ error: 'A team with the same name already exists.' });
+        }
+        console.log('createTeam - error: ', error)
+        res.status(500).json({ error: 'Internal server error.' });
+    }
 };
 
 // Add a user under selected Team > Role
@@ -56,29 +71,34 @@ const addUserToTeamRole = async (req, res) => {
     try{
         const { userID, teamName, roleName } = req.body;
 
+        // Find the user in the users collections.
+        const user = await USERS.findOne({ userID });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
+        };
+
         // Find the team by name.
         const team = await TEAM.findOne({ teamName });
+        console.log('addUserToTeamRole - team: ', team)
         if(!team){
             return res.status(404).json({ error: 'Team not found.' });
         };
 
-        // Fine the role withing the team's roles array.
-        const role = team.roles.find(role => role.roleName === roleName);
-        if(!role){
-            return res.status(404).json({ error: 'Role not found.' });
-        };
-
         // Check if the user already exists in the role.
-        const existingUser = role.members.find(member => member.userID === userID);
+        const existingUser = team.users.find(member => member.userID === userID);
         if(existingUser){
             return res.status(400).json({ error: 'User already exists in the role.' });
         };
 
         // Add the user to the role.
-        role.members.push({ userID });
+        team.users.push({
+            userID: user.userID,
+            user_uId: user._id,
+            roleName: roleName
+        });
         await team.save();
 
-        res.status(200).json({ message: 'User successfully added to role.' });
+        res.status(200).json({ message: 'Team and Role successfully assigned to user.' });
     }catch(error){
         console.error('Error adding user to role:', error);
         res.status(500).json({ error: 'Internal server error.' });
@@ -93,15 +113,16 @@ const getUserTeams = async (req, res) => {
         
         const uId = decodedToken.uId;
         const userID = await getUserIDFromDB(uId);
-        const userTeams = await TEAM.find({ 'roles.members.userID': userID });
-        console.log('getUserTeams - userTeams: ', userTeams)
+        // const userTeams = await TEAM.find({ 'roles.members.userID': userID });
+        // const userTeams = await TEAM.aggregate([{$match:{'$roles.members'}}]);
+        // console.log('getUserTeams - userID: ', userID)
         
-        res.status(200).json(userTeams);
+        // res.status(200).json(userTeams);
         // return userTeams;
     } catch (error) {
         console.error(error);
         throw error; // Rethrowing the error
-    }
+    };
 };
 
 

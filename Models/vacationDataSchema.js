@@ -1,26 +1,16 @@
 const mongoose = require("mongoose");
 
 const vacationDataSchema = mongoose.Schema({
-    uId: {
-        type: String,
+    user_uId: {
+        type: mongoose.Types.ObjectId,
         required: true
     },
     year: {
         type: Number,
-        required: true
     },
-    months: [{
-        month: {
-            type: Number,
-            required: true
-        },
-        dates: [{
-            date: {
-                type: Number,
-                required: true
-            },
-        }]
-    }]
+    date: {
+        type: Date,
+    },
 });
 
 const VACATIONDATA = mongoose.model('vacationData', vacationDataSchema, 'vacationData');

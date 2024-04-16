@@ -8,7 +8,12 @@ const teamSchema = mongoose.Schema({
         required: true,
         unique: true,
     },
-    roles: [
+    teamRoles: [{
+        type: String,
+        enum: teamRoles,
+        required: true,
+    }],
+    users: [
         {
             roleName: {
                 type: String,
@@ -21,16 +26,18 @@ const teamSchema = mongoose.Schema({
                     },
                     message: 'Invalid role for the Team.',
                 },
-                
             },
-            members: [
-                {
-                    userID: {
-                        type: String,
-                        required: true,
-                    },
-                },
-            ]
+            userID: {
+                type: String,
+                required: true,
+            },
+            user_uId: {
+                type: mongoose.Types.ObjectId,
+            },
+            userAddedOn: {
+                type: Date,
+                default: new Date(),
+            },
         },
     ],
 });

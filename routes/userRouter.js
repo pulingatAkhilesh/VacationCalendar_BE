@@ -5,8 +5,8 @@ const router = express.Router();
 
 /* GET users listing. */
 router.get('/usersList', userAuth, getAllUsers);
-router.get('/userfullname/:userID', userAuth, getUserFullName);
-router.get('/getUserVacationData/:uId', getUserVacationData);
+router.get('/userfullname/:user_uId', userAuth, getUserFullName);
+router.get('/getUserVacationData/:user_uId', getUserVacationData);
 
 router.post('/createVacation', userAuth, createVacation);
 
