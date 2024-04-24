@@ -28,53 +28,53 @@ const getUserFullName = async (req, res) => {
 
 // Store vacation planned dates of a user in the database.
 const createVacation = async (req, res) => {
-    const { uId, year, month, selectedDates } = req.body;
     try{
-        // Check if the document already exists for the given year and month.
-        let vacationData = await VACATIONDATA.findOne({ uId, year });
-        if(!vacationData){
-            vacationData = new VACATIONDATA({
-                uId,
-                year,
-                months: [],
-            });
+        const { uId, year, selectedDates } = req.body;
+
+        if (!uId || !year || !selectedDates || !Array.isArray(selectedDates)) {
+            return res.status(400).json({ success: false, message: 'Invalid request data.' });
         };
 
-        // Find or create the month object.
-        let monthData = vacationData.months.find((m) => m.month === month);
-        if(!monthData){
-            monthData = {
-                month,
-                dates: [],
+        // Check if data for the given year already exists.
+        let existingData = await VACATIONDATA.findOne({ user_uId: uId, year: year });
+        if (existingData) {
+            // Data for the given year exists, check for the duplicate dates.
+            const duplicateDates = selectedDates.filter(date => existingData.selected_dates.includes(date));
+            if (duplicateDates.length === selectedDates.length) {
+                // All selected dates are duplicates.
+                return res.status(400).json({ success: false, message: 'All selected dates already exist in the database.' });
             };
-            vacationData.months.push(monthData);
+            if (duplicateDates.length > 0) {
+                // Some selected dates are duplicates.
+                // Filter out the dates that are not duplicates.
+                const newDates = selectedDates.filter(date => !existingData.selected_dates.includes(date));
+
+                // Update the existing data by adding new dates.
+                existingData.selected_dates = [...existingData.selected_dates, ...newDates];
+                await existingData.save();
+
+                return res.status(200).json({ success: true, message: 'Vacation Plan successfully saved. Duplicate date(s) skipped.' });
+            };
         };
 
-        // Add the selected dates to the month.
-        selectedDates.forEach(date => {
-            const dateExists = monthData.dates.some(existingDate => existingDate.date === date);
-            if(!dateExists){
-                monthData.dates.push({ date });
-            };
-        });
-
-        // Save the selected dates to the month.
+        // No data for the given year or no duplicate dates found. Create new data.
+        const vacationData = new VACATIONDATA({ user_uId: uId, year: year, selected_dates: selectedDates });
         await vacationData.save();
 
         res.status(200).json({ success: true, message: 'Vacation Plan successfully saved.' });
     }catch(error){
         console.error(error);
         res.status(500).json({ success: false, message: 'Internal server error.' });
-    }
-}
+    };
+};
 
 // GET planned vacation dates of a user.
 const getUserVacationData = async (req, res) => {
-    const { uId } = req.params;
-    console.log('userVacationData - req.params: ', req.params)
-    const userVacationData = await VACATIONDATA.find({ uId: uId });
-    console.log('userVacationData: ', userVacationData)
-    res.status(200).json(userVacationData)
+    // const { uId } = req.params;
+    // console.log('userVacationData - req.params: ', req.params)
+    // const userVacationData = await VACATIONDATA.find({ uId: uId });
+    // console.log('userVacationData: ', userVacationData)
+    // res.status(200).json(userVacationData)
 }
 
 module.exports = { getAllUsers, getUserFullName, createVacation, getUserVacationData };
