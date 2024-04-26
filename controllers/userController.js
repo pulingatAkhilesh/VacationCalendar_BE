@@ -16,7 +16,6 @@ const getUserFullName = async (req, res) => {
     try{
         const { user_uId } = req.params;
         const user = await USERS.findById(user_uId).select('fullName');
-        console.log('getUserFullName - user: ', user)
         if(!user){
             return res.status(404).json({ message: 'User not found.' });
         };
@@ -34,47 +33,64 @@ const createVacation = async (req, res) => {
         if (!uId || !year || !selectedDates || !Array.isArray(selectedDates)) {
             return res.status(400).json({ success: false, message: 'Invalid request data.' });
         };
+        if (selectedDates.length == 0) {
+            return res.status(400).json({ success: false, message: 'No dates selected. Please select dates and try again to save vacation plan.' });
+        };
 
         // Check if data for the given year already exists.
         let existingData = await VACATIONDATA.findOne({ user_uId: uId, year: year });
         if (existingData) {
             // Data for the given year exists, check for the duplicate dates.
-            const duplicateDates = selectedDates.filter(date => existingData.selected_dates.includes(date));
+            const existingDateStrings = existingData.selected_dates.map(date => date.toISOString().split('T')[0]);
+            const duplicateDates = selectedDates.filter(date => existingDateStrings.includes(date));
             if (duplicateDates.length === selectedDates.length) {
                 // All selected dates are duplicates.
-                return res.status(400).json({ success: false, message: 'All selected dates already exist in the database.' });
+                return res.status(200).json({ success: false, message: 'All selected dates already exist in the database.' });
             };
-            if (duplicateDates.length > 0) {
-                // Some selected dates are duplicates.
-                // Filter out the dates that are not duplicates.
-                const newDates = selectedDates.filter(date => !existingData.selected_dates.includes(date));
 
+            // Some selected dates are duplicates.
+            // Filter out the dates that are not duplicates.
+            const newDates = selectedDates.filter(date => !existingDateStrings.includes(date));
+            if (newDates.length > 0) {
                 // Update the existing data by adding new dates.
-                existingData.selected_dates = [...existingData.selected_dates, ...newDates];
-                await existingData.save();
-
-                return res.status(200).json({ success: true, message: 'Vacation Plan successfully saved. Duplicate date(s) skipped.' });
+                await VACATIONDATA.updateOne(
+                    { user_uId: uId, year: year },
+                    { $push: { selected_dates: { $each: newDates } } }
+                );
+                if (duplicateDates.length > 0) {
+                    return res.status(200).json({ success: true, message: 'Vacation Plan successfully saved. Duplicate date(s) skipped.' });
+                } else {
+                    return res.status(200).json({ success: true, message: 'Vacation Plan successfully saved.' });
+                };
+            }else{
+                return res.status(400).json({ success: false, message: 'No new dates to add. Duplicate date(s) skipped.' });
             };
+        }else{
+            // No data for the given year or no duplicate dates found. Create new data.
+            const vacationData = new VACATIONDATA({ user_uId: uId, year: year, selected_dates: selectedDates });
+            await vacationData.save();
+
+            return res.status(200).json({ success: true, message: 'Vacation Plan successfully saved.' });
         };
-
-        // No data for the given year or no duplicate dates found. Create new data.
-        const vacationData = new VACATIONDATA({ user_uId: uId, year: year, selected_dates: selectedDates });
-        await vacationData.save();
-
-        res.status(200).json({ success: true, message: 'Vacation Plan successfully saved.' });
     }catch(error){
         console.error(error);
-        res.status(500).json({ success: false, message: 'Internal server error.' });
+        return res.status(500).json({ success: false, message: 'Internal server error.' });
     };
 };
 
 // GET planned vacation dates of a user.
 const getUserVacationData = async (req, res) => {
+    console.log('getUserVacationData - req: ', req)
+    try {
+        // const userId = req.user.id;
+    } catch (error) {
+        
+    }
     // const { uId } = req.params;
     // console.log('userVacationData - req.params: ', req.params)
     // const userVacationData = await VACATIONDATA.find({ uId: uId });
     // console.log('userVacationData: ', userVacationData)
     // res.status(200).json(userVacationData)
-}
+};
 
 module.exports = { getAllUsers, getUserFullName, createVacation, getUserVacationData };
