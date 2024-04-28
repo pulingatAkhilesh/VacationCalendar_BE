@@ -80,17 +80,14 @@ const createVacation = async (req, res) => {
 
 // GET planned vacation dates of a user.
 const getUserVacationData = async (req, res) => {
-    console.log('getUserVacationData - req: ', req)
     try {
-        // const userId = req.user.id;
+        const { user_uId } = req.params;
+        const userVacationData = await VACATIONDATA.find({ user_uId });
+        res.status(200).json({ data: userVacationData });
     } catch (error) {
-        
-    }
-    // const { uId } = req.params;
-    // console.log('userVacationData - req.params: ', req.params)
-    // const userVacationData = await VACATIONDATA.find({ uId: uId });
-    // console.log('userVacationData: ', userVacationData)
-    // res.status(200).json(userVacationData)
+        console.error('Error retrieving user vacation data: ', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    };
 };
 
 module.exports = { getAllUsers, getUserFullName, createVacation, getUserVacationData };

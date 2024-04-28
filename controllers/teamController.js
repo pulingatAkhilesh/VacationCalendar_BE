@@ -20,18 +20,17 @@ const getUserIDFromDB = async (_id) => {
     };
 };
 
-// GET all Teams.
+// Get all Teams.
 const getTeams = async (req, res) => {
     try{
         const teams = await TEAM.find();
-        console.log('getTeams - teams: ', teams)
         res.status(200).json(teams);
     }catch(error){
         res.status(500).json({ error: error.message });
     };
 };
 
-// GET all predefined Roles for creating a Team.
+// Get all predefined Roles for creating a Team.
 const getPredefinedRoles = async (req, res) => {
     try{
         res.status(200).json({ PredefinedRoles: PREDEFINED_ROLES });
@@ -59,15 +58,13 @@ const createTeam = async (req, res) => {
     }catch(error){
         if(error.code === 11000 && error.keyPattern && error.keyPattern.teamName){
             return res.status(400).json({ error: 'A team with the same name already exists.' });
-        }
-        console.log('createTeam - error: ', error)
+        };
         res.status(500).json({ error: 'Internal server error.' });
-    }
+    };
 };
 
 // Add a user under selected Team > Role
 const addUserToTeamRole = async (req, res) => {
-    console.log('req: ', req);
     try{
         const { userID, teamName, roleName } = req.body;
 
@@ -79,7 +76,6 @@ const addUserToTeamRole = async (req, res) => {
 
         // Find the team by name.
         const team = await TEAM.findOne({ teamName });
-        console.log('addUserToTeamRole - team: ', team)
         if(!team){
             return res.status(404).json({ error: 'Team not found.' });
         };
@@ -100,46 +96,36 @@ const addUserToTeamRole = async (req, res) => {
 
         res.status(200).json({ message: 'Team and Role successfully assigned to user.' });
     }catch(error){
-        console.error('Error adding user to role:', error);
         res.status(500).json({ error: 'Internal server error.' });
     };
 };
 
-// Function to extract all teams in which the logged-in user added.
-const getUserTeams = async (req, res) => {
+// Function to extract all users of all the teams in which the logged-in user added.
+const getUsersFromTeams = async (req, res) => {
     try {
         const token = req.headers['authorization'].split(' ')[1];
         const decodedToken = await util.promisify(jwt.verify)(token, 'vacationcalendar');
-        
-        const uId = decodedToken.uId;
-        const userID = await getUserIDFromDB(uId);
-        // const userTeams = await TEAM.find({ 'roles.members.userID': userID });
-        // const userTeams = await TEAM.aggregate([{$match:{'$roles.members'}}]);
-        // console.log('getUserTeams - userID: ', userID)
-        
-        // res.status(200).json(userTeams);
-        // return userTeams;
-    } catch (error) {
-        console.error(error);
-        throw error; // Rethrowing the error
-    };
-};
+        const user_uId = decodedToken.uId;
+        const teams = await TEAM.find({ 'users.user_uId': user_uId });
 
+        const teamsWithUsers = teams.map(team => {
+            const users = team.users.map(user => {
+                return {
+                    user_uId: user_uId,
+                };
+            });
 
-// Function to extract userIDs from each team.
-const getUsersFromTeams = async (req, res) => {
-    try {
-        const userTeams = await getUserTeams(req, res);
-        const userIDsByTeam = userTeams.map(team => {
             return {
+                team_id: team._id,
                 teamName: team.teamName,
-                userIDs: extractUserIDs(team)
+                users: users,
             };
         });
-        res.status(200).json(userIDsByTeam);
+
+        res.status(200).json(teamsWithUsers);
+        return teamsWithUsers;
     } catch (error) {
-        console.error('Error retrieving users from teams:', error);
-        res.status(500).json({ message: 'Server error.' });
+        res.status(500).json({ message: 'Server error on getting users data from your teams.' });
     };
 };
 
@@ -159,6 +145,5 @@ module.exports = {
     getPredefinedRoles,
     createTeam,
     addUserToTeamRole,
-    getUserTeams,
-    getUsersFromTeams,
+    getUsersFromTeams
 };
