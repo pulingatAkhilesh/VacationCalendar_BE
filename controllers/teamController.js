@@ -129,6 +129,26 @@ const getUsersFromTeams = async (req, res) => {
     };
 };
 
+// Function to extract all users of the given team.
+const getUsersFromTeam = async (req, res) => {
+    console.log('getUsersFromTeam - req: ', req)
+    try {
+        const { team_id } = req.params;
+        const team = await TEAM.findById(team_id);
+
+        if (!team) {
+            return res.status(404).json({ message: "Team not found." });
+        }
+
+        const users = team.users;
+        console.log('getUsersFromTeam - users: ', users)
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("Error retrieving users from team:", error);
+        res.status(500).json({ message: "Server error" });
+    };
+};
+
 // Function to extract userID from a team's roles.
 const extractUserIDs = (team) => {
     const userIDs = [];
@@ -145,5 +165,6 @@ module.exports = {
     getPredefinedRoles,
     createTeam,
     addUserToTeamRole,
-    getUsersFromTeams
+    getUsersFromTeams,
+    getUsersFromTeam
 };
