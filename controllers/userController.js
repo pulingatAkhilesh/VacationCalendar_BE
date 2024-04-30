@@ -83,6 +83,7 @@ const getUserVacationData = async (req, res) => {
     try {
         const { user_uId } = req.params;
         const userVacationData = await VACATIONDATA.find({ user_uId });
+        console.log('getUserVacationData - userVacationData: ', userVacationData)
         res.status(200).json({ data: userVacationData });
     } catch (error) {
         console.error('Error retrieving user vacation data: ', error);
