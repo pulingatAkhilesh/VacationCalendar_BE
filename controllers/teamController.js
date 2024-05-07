@@ -131,7 +131,6 @@ const getUsersFromTeams = async (req, res) => {
 
 // Function to extract all users of the given team.
 const getUsersFromTeam = async (req, res) => {
-    console.log('getUsersFromTeam - req: ', req)
     try {
         const { team_id } = req.params;
         const team = await TEAM.findById(team_id);
@@ -141,7 +140,6 @@ const getUsersFromTeam = async (req, res) => {
         }
 
         const users = team.users;
-        console.log('getUsersFromTeam - users: ', users)
         res.status(200).json(users);
     } catch (error) {
         console.error("Error retrieving users from team:", error);

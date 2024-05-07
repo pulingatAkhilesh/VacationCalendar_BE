@@ -1,5 +1,7 @@
+const { default: mongoose } = require('mongoose');
 const USERS = require('../Models/userSchema');
 const VACATIONDATA = require('../Models/vacationDataSchema');
+const OBJECT_ID = mongoose.Types.ObjectId;
 
 // GET all Teams.
 const getAllUsers = async (req, res) => {
@@ -82,8 +84,46 @@ const createVacation = async (req, res) => {
 const getUserVacationData = async (req, res) => {
     try {
         const { user_uId } = req.params;
-        const userVacationData = await VACATIONDATA.find({ user_uId });
-        console.log('getUserVacationData - userVacationData: ', userVacationData)
+        const userVacationData = await VACATIONDATA.aggregate([
+            {
+                $match:{user_uId: new OBJECT_ID(user_uId)}
+            },{
+                $unwind:'$selected_dates'
+            },{
+                $addFields:{
+                    month: {$month: '$selected_dates'},
+                    yearSelected: {$year: '$selected_dates'},
+                }
+            },
+            {
+                $match: {
+                    month: 5,
+                    yearSelected: 2025
+                }
+            },
+            {
+                $lookup:
+                  {
+                    from: 'users',
+                    localField: 'user_uId',
+                    foreignField: '_id',
+                    as: 'user'
+                  }
+            },
+            {
+                $project: {
+                    user: {$arrayElemAt: ['$user', 0]},
+                    selected_dates: 1,
+                    month: 1,
+                    user_uId: 1,
+                    _id: 1
+                }
+            },
+            {
+                $group: {_id: '$user_uId', data: {$push: '$$ROOT'}}
+            }
+        ])
+        // console.log('getUserVacationData - userVacationData: ', userVacationData)
         res.status(200).json({ data: userVacationData });
     } catch (error) {
         console.error('Error retrieving user vacation data: ', error);

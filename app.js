@@ -15,6 +15,9 @@ const adminRouter = require('./routes/adminRouter');
 
 const app = express();
 
+// verify user session using JWT token.
+// verifyToken();
+
 // use cors middleware.
 app.use(cors());
 
