@@ -1,35 +1,48 @@
 const { default: mongoose } = require('mongoose');
 const USERS = require('../Models/userSchema');
 const VACATIONDATA = require('../Models/vacationDataSchema');
+const TEAM = require('../Models/teamSchema');
 const OBJECT_ID = mongoose.Types.ObjectId;
 
 // GET all Teams.
 const getAllUsers = async (req, res) => {
-    try{
+    try {
         const usersList = await USERS.find();
         res.status(200).json(usersList);
-    }catch(error){
+    } catch (error) {
         res.status(500).json({ error: error.message });
     };
 };
 
 // GET fullName of the given userID.
 const getUserFullName = async (req, res) => {
-    try{
+    try {
         const { user_uId } = req.params;
         const user = await USERS.findById(user_uId).select('fullName');
-        if(!user){
+        if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         };
         res.status(200).json({ fullName: user.fullName });
-    }catch(error){
+    } catch (error) {
         res.status(500).json({ message: 'Server error.' });
+    };
+};
+
+// Fetch teams to which the logged in user is added. 
+const getUserTeams = async(req, res) => {
+    const { user_uId } = req.params;
+
+    try {
+        const userTeams = await TEAM.find({ 'users.user_uId': user_uId });
+        res.status(200).json(userTeams);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error.' });
     };
 };
 
 // Store vacation planned dates of a user in the database.
 const createVacation = async (req, res) => {
-    try{
+    try {
         const { uId, year, selectedDates } = req.body;
 
         if (!uId || !year || !selectedDates || !Array.isArray(selectedDates)) {
@@ -64,18 +77,18 @@ const createVacation = async (req, res) => {
                 } else {
                     return res.status(200).json({ success: true, message: 'Vacation Plan successfully saved.' });
                 };
-            }else{
+            } else {
                 return res.status(400).json({ success: false, message: 'No new dates to add. Duplicate date(s) skipped.' });
             };
-        }else{
+        } else {
             // No data for the given year or no duplicate dates found. Create new data.
             const vacationData = new VACATIONDATA({ user_uId: uId, year: year, selected_dates: selectedDates });
             await vacationData.save();
 
             return res.status(200).json({ success: true, message: 'Vacation Plan successfully saved.' });
         };
-    }catch(error){
-        console.error(error);
+    } catch (error) {
+        console.error('Error creating user vacation: ', error);
         return res.status(500).json({ success: false, message: 'Internal server error.' });
     };
 };
@@ -86,33 +99,39 @@ const getUserVacationData = async (req, res) => {
         const { user_uId } = req.params;
         const userVacationData = await VACATIONDATA.aggregate([
             {
-                $match:{user_uId: new OBJECT_ID(user_uId)}
-            },{
-                $unwind:'$selected_dates'
-            },{
-                $addFields:{
-                    month: {$month: '$selected_dates'},
-                    yearSelected: {$year: '$selected_dates'},
+                $match: { user_uId: new OBJECT_ID(user_uId) }
+            },
+            {
+                $unwind: '$selected_dates'
+            },
+            {
+                $addFields: {
+                    month: { $month: '$selected_dates' },
+                    yearSelected: { $year: '$selected_dates' },
                 }
             },
             {
                 $match: {
-                    month: 5,
-                    yearSelected: 2025
+                    month: parseInt(req.query.month),
+                    yearSelected: { $eq: parseInt(req.query.year) },
+                    selected_dates: {
+                        $gte: new Date(parseInt(req.query.year), parseInt(req.query.month) - 1, 1),
+                        $lt: new Date(parseInt(req.query.year), parseInt(req.query.month), 1),
+                    }
                 }
             },
             {
                 $lookup:
-                  {
+                {
                     from: 'users',
                     localField: 'user_uId',
                     foreignField: '_id',
                     as: 'user'
-                  }
+                }
             },
             {
                 $project: {
-                    user: {$arrayElemAt: ['$user', 0]},
+                    user: { $arrayElemAt: ['$user', 0] },
                     selected_dates: 1,
                     month: 1,
                     user_uId: 1,
@@ -120,10 +139,10 @@ const getUserVacationData = async (req, res) => {
                 }
             },
             {
-                $group: {_id: '$user_uId', data: {$push: '$$ROOT'}}
+                $group: { _id: '$user_uId', data: { $push: '$$ROOT' } }
             }
-        ])
-        // console.log('getUserVacationData - userVacationData: ', userVacationData)
+        ]);
+
         res.status(200).json({ data: userVacationData });
     } catch (error) {
         console.error('Error retrieving user vacation data: ', error);
@@ -131,4 +150,4 @@ const getUserVacationData = async (req, res) => {
     };
 };
 
-module.exports = { getAllUsers, getUserFullName, createVacation, getUserVacationData };
+module.exports = { getAllUsers, getUserFullName, getUserTeams, createVacation, getUserVacationData };
