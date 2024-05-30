@@ -1,0 +1,1 @@
+const DB_URI = 'mongodb+srv://dba:dbAdministrator@cluster0.hj82hys.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
