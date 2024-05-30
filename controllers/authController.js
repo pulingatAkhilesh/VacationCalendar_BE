@@ -5,6 +5,26 @@ const jwt = require('jsonwebtoken');
 const TEAM = require('../Models/teamSchema');
 
 // function for Login.
+// const doLogin = async (req, res) => {
+//     const user = await USERS.findOne({ userID: req.body.userID });
+//     if (user) {
+//         bcrypt.compare(req.body.password, user.password, (error, hashRes) => {
+//             if (hashRes) {
+//                 const sessionTime = Date.now();
+//                 console.log('doLogin - sessionTime', sessionTime)
+//                 console.log('user?.defaultRole: ', user?.defaultRole);
+//                 const token = jwt.sign({ uId: user._id, sessionTime: sessionTime, email: user.email, fullName: user?.fullName, role: user?.defaultRole }, "vacationcalendar", { expiresIn: '2d' });
+//                 console.log('doLogin - token: ', token)
+//                 user.password = undefined;
+//                 res.status(200).json({ message: 'login successful.', token: token, user: user, sessionTime: sessionTime });
+//             }
+//         })
+//     } else {
+//         res.status(200).json({ message: 'invalid credentials.', token: null })
+//     }
+// }
+
+// Function to handle user login
 const doLogin = async (req, res) => {
     const user = await USERS.findOne({ userID: req.body.userID });
     if (user) {
@@ -16,13 +36,36 @@ const doLogin = async (req, res) => {
                 const token = jwt.sign({ uId: user._id, sessionTime: sessionTime, email: user.email, fullName: user?.fullName, role: user?.defaultRole }, "vacationcalendar", { expiresIn: '2d' });
                 console.log('doLogin - token: ', token)
                 user.password = undefined;
+                // Set the token in a cookie
+                res.cookie('token', token, { httpOnly: true });
                 res.status(200).json({ message: 'login successful.', token: token, user: user, sessionTime: sessionTime });
+            } else {
+                res.status(200).json({ message: 'invalid credentials.', token: null });
             }
-        })
+        });
     } else {
-        res.status(200).json({ message: 'invalid credentials.', token: null })
+        res.status(200).json({ message: 'invalid credentials.', token: null });
     }
-}
+};
+
+//function to check token expiration and send response.
+const authenticateToken = (req, res, next) => {
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ message: 'Unauthorized: No token provided.' });
+    };
+
+    jwt.verify(token, 'vacationcalendar', (error, decoded) => {
+        if (error) {
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({ message: 'Unauthorized: Token has expired.' });
+            };
+            return res.status(401).json({ message: 'Forbidden: Invalid token.' });
+        };
+        req.user = decoded;
+        next();
+    });
+};
 
 // function for registering administrator.
 const createAdmin = async (req, res) => {
@@ -84,12 +127,21 @@ const registerUser = async (req, res) => {
 
         // Update the team with the new user's userID.
         await TEAM.updateOne(
-            { teamName: req.body.defaultTeam, 'roles.roleName': req.body.defaultRole },
-            { $push: { 'roles.$.members': { userID: req.body.userID } } }
+            { teamName: req.body.defaultTeam },
+            {
+                $push: {
+                    users: {
+                        roleName: req.body.defaultRole,
+                        userID: req.body.userID,
+                        user_uId: newUser._id,
+                        userAddedOn: new Date(),
+                    }
+                }
+            }
         );
-        res.status(200).json({ message: 'New user registration successful.', newUser });
+        res.status(200).json({ message: 'New user registration successful.' });
     } catch (error) {
-        console.error('Error registering new user.');
+        console.error('Error registering new user: ', error);
         res.status(500).json({ message: 'Server error.' });
     };
 };
@@ -111,4 +163,4 @@ function verifyToken(req, res, next) {
     });
 };
 
-module.exports = { doLogin, createAdmin, registerUser, verifyToken };
+module.exports = { doLogin, authenticateToken, createAdmin, registerUser, verifyToken };
