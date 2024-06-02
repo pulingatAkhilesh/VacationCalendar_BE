@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
+const DB_URI = require('../constants/constants');
 
 const connectDB = async () => {
     try{
-        // const connection = await mongoose.connect('mongodb://127.0.0.1:27017/vacationcalendar', {});
         const connection = await mongoose.connect(DB_URI, {
             serverApi: {
                 strict: true,
