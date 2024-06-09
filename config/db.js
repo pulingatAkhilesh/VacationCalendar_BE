@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
-const DB_URI = require('../constants/constants');
 
 const connectDB = async () => {
-    try{
-        const connection = await mongoose.connect('mongodb+srv://dba:dbAdministrator@cluster0.hj82hys.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
-    }catch(error){
+    try {
+        const connection = await mongoose.connect('mongodb+srv://akhilesh0428:NQkPYRYED61g3EX8@vacationcalendar00.loon9k9.mongodb.net/', {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        })
+    } catch (error) {
         console.log('Error in connecting database: ', error);
         throw error;
     };
