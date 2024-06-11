@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const multer = require('multer');
-const { adminAuth } = require('../middlewares/authorization');
+const { adminAuth, teamLeadAuth } = require('../middlewares/authorization');
 const { createTeam, addUserToTeamRole } = require('../controllers/teamController');
 const { createAdmin, registerUser } = require('../controllers/authController');
 
@@ -20,6 +20,5 @@ const upload = multer({ storage: fileStorage });
 
 router.post('/createTeam', adminAuth, createTeam);
 router.post('/registerUser', adminAuth, registerUser);
-router.post('/addUserToRole', adminAuth, addUserToTeamRole);
 
 module.exports = router;
