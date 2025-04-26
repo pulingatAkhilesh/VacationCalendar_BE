@@ -150,4 +150,35 @@ const getUserVacationData = async (req, res) => {
     };
 };
 
-module.exports = { getAllUsers, getUserFullName, getUserTeams, createVacation, getUserVacationData };
+const deleteVacationDate = async (req, res) => {
+    const { user_uId } = req.params;
+    const { date } = req.query;
+    // console.log('=========================req=========================: ', req)
+
+    if(!date){
+        return res.status(400).json({message: 'Date is required.'});
+    };
+
+    try {
+        console.log('=========================date=========================: ', date)
+        const vacationData = await VACATIONDATA.findById(user_uId);
+        console.log('=========================vacationData=========================: ', vacationData)
+
+        if(!vacationData){
+            return res.status(404).json({ message: 'Vacation data not found' });
+        };
+
+        // Filter out the date from the selected_dates array
+        vacationData.selected_dates = vacationData.selected_dates.filter(
+            (d) => d.toISOString() !== new Date(date).toISOString()
+        );
+    
+        await vacationData.save();
+        res.status(200).json({ message: 'Date deleted successfully.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message: 'Server error.'});
+    };
+};
+
+module.exports = { getAllUsers, getUserFullName, getUserTeams, createVacation, getUserVacationData, deleteVacationDate };
